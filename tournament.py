@@ -1,31 +1,32 @@
 import random
+import copy
 import pandas as pd
 from tabulate import tabulate
 import os
 
 from strategies import (
-    # 10 Top "Nice" Strategies
+    # Nice Strategies
     TitForTat,
     Champion,
-    Elem,
-    Cave,
-    Graaskamp,
-    WmAdams,
     Borufsen,
+    Cave,
+    WmAdams,
+    Graaskamp,
     Kluepfel,
     RichardHufford,
     Yamachi,
-    # 10 Top "Not Nice" (Probing / Mean) Strategies
-    Tester2nd,
-    DynamicTFT,
+    Elem,
+    # Not Nice Strategies
     Tranquilizer,
     Joss,
-    Tester3,
     RevisedDowning,
     Tester,
+    RandomStrategy,
+    Tester2nd,
+    DynamicTFT,
+    Tester3,
     SuspiciousTitForTat,
-    AlwaysDefect,
-    RandomStrategy
+    AlwaysDefect
 )
 
 PAYOFFS = {
@@ -45,6 +46,10 @@ def apply_noise(move, noise_level):
 
 
 def play_match(p1, p2, rounds=ROUNDS_PER_MATCH, noise=0.0):
+    # Deep copy strategy instances to ensure clean state and independence in self-play
+    p1 = copy.deepcopy(p1)
+    p2 = copy.deepcopy(p2)
+    
     hist1, hist2 = [], []
     total_score1, total_score2 = 0.0, 0.0
 
@@ -70,26 +75,28 @@ def run_tournament(strategies_list, rounds=ROUNDS_PER_MATCH, noise=0.0):
     
     # Map strategies to short abbreviations for matrix headers
     abbr_map = {
+        # Nice Strategies
         'Tit for Tat': 'TFT',
         'Champion': 'CH',
-        'Elem': 'EL',
-        'Cave': 'CA',
-        'Graaskamp': 'GR',
-        'WmAdams': 'WA',
         'Borufsen': 'BO',
+        'Cave': 'CA',
+        'WmAdams': 'WA',
+        'Graaskamp': 'GR',
         'Kluepfel': 'KL',
         'Richard Hufford': 'RH',
         'Yamachi': 'YA',
-        'Tester 2nd': 'T2',
-        'Dynamic TFT': 'DT',
+        'Elem': 'EL',
+        # Not Nice Strategies
         'Tranquilizer': 'TR',
         'Joss': 'JO',
-        'Tester 3': 'T3',
         'Revised Downing': 'RD',
         'Tester': 'TE',
+        'Random (50/50)': 'RN',
+        'Tester 2nd': 'T2',
+        'Dynamic TFT': 'DT',
+        'Tester 3': 'T3',
         'Suspicious Tit for Tat': 'ST',
-        'Always Defect': 'AD',
-        'Random (50/50)': 'RN'
+        'Always Defect': 'AD'
     }
     
     abbr_names = [abbr_map.get(name, name[:2].upper()) for name in strategy_names]
@@ -155,12 +162,12 @@ if __name__ == "__main__":
             print("Invalid input. Please enter a valid number.")
 
     participants = [
-        # Top 10 Nice
-        TitForTat(), Champion(), Elem(), Cave(), Graaskamp(),
-        WmAdams(), Borufsen(), Kluepfel(), RichardHufford(), Yamachi(),
-        # Top 10 Not Nice
-        Tester2nd(), DynamicTFT(), Tranquilizer(), Joss(), Tester3(),
-        RevisedDowning(), Tester(), SuspiciousTitForTat(), AlwaysDefect(), RandomStrategy()
+        # Nice Strategies
+        TitForTat(), Champion(), Borufsen(), Cave(), WmAdams(),
+        Graaskamp(), Kluepfel(), RichardHufford(), Yamachi(), Elem(),
+        # Not Nice Strategies
+        Tranquilizer(), Joss(), RevisedDowning(), Tester(), RandomStrategy(),
+        Tester2nd(), DynamicTFT(), Tester3(), SuspiciousTitForTat(), AlwaysDefect()
     ]
 
     print(f"\nRunning Tournament with 20 Strategies...")
