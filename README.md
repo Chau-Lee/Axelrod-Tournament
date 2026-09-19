@@ -14,6 +14,7 @@ Kết quả khi sai sót ngoài ý muốn là 10%
 ## Thông tin bổ sung
 Phát hiện lỗi lúc 19/9/2026 9 giờ 38 phút trong logic của chiến thuật và comment, đã thay đổi file trong Python. Có thể phải làm lại từ đầu  
 Kết quả mới trong code Python mới có thể sẽ hơi khác so với file Excel được đăng trên đây.  
+Kết quả mới sẽ có tên "Update" ở phần đầu file Excel
 Code Python cũ vẫn có thể chạy được, chỉ là kết quả hơi khác  
 Hướng tiếp theo: Dùng chính thư viện chiến thuật của giáo sư Axelrod để có kết quả thử nghiệm chính xác hơn.  
 Hướng phát triển thử nghiệm: Thử nghiệm nhiều khía cạnh và thay đổi nhiều yếu tố cùng một lúc để quan sát.
