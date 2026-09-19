@@ -12,6 +12,8 @@ Kết quả khi chỉ trong vòng 50 ván: Nếu có ít ván hơn ban đầu th
 Kết quả khi sai sót ngoài ý muốn là 10%  
 
 ## Thông tin bổ sung
+Phát hiện lỗi, đã thay đổi file trong Python. Có thể phải làm lại từ đầu  
 Hướng tiếp theo: Dùng chính thư viện chiến thuật của giáo sư Axelrod để có kết quả thử nghiệm chính xác hơn.
+Hướng phát triển thử nghiệm: Thử nghiệm nhiều khía cạnh và thay đổi nhiều yếu tố cùng một lúc để quan sát.
 
 Mong mọi người ủng hộ!!!
