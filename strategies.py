@@ -10,13 +10,13 @@ class Strategy:
 
 
 # =====================================================================
-# TOP 10 "NICE" STRATEGIES (Cooperative-First / Non-Exploitative)
-# Ranks 1 through 10 in Axelrod's 2nd Tournament
+# NICE STRATEGIES (Cooperative-First / Non-Exploitative)
 # =====================================================================
 
 class TitForTat(Strategy):
     """
     Rank 1 (Anatol Rapoport)
+    Tournament Winner
     Simple and iconic: Cooperates on the first move, then copies opponent's previous move.
     """
     def __init__(self):
@@ -30,7 +30,8 @@ class TitForTat(Strategy):
 
 class Champion(Strategy):
     """
-    Rank 2 (Justinian Shoreland)
+    Rank 2 (Danny C. Champion)
+    2nd Place
     Complex multi-phase strategy:
     - Cooperates for the first 10 rounds.
     - If opponent defects in first 25 rounds, retaliates probabilistically based on defection rate.
@@ -66,51 +67,69 @@ class Champion(Strategy):
         return 'C'
 
 
-class Elem(Strategy):
+class Borufsen(Strategy):
     """
-    Rank 3
-    Plays Tit-for-Tat, but continuously monitors opponent's cooperation rate.
-    If the opponent proves to be highly cooperative (>85% C after 10 turns),
-    it takes a calculated 5% gamble to defect unprovoked for extra payoff.
+    Rank 3 (Otto Borufsen)
+    3rd Place
+    Calculates cumulative defect ratio across entire match length.
+    If opponent's lifetime defection rate exceeds 25%, it locks into retaliatory defection.
     """
     def __init__(self):
-        super().__init__("Elem")
+        super().__init__("Borufsen")
 
     def move(self, my_history, opponent_history):
         if not opponent_history:
             return 'C'
         
-        n = len(opponent_history)
-        if n > 10:
-            c_rate = opponent_history.count('C') / n
-            if c_rate > 0.85 and random.random() < 0.05:
-                return 'D'
-                
-        return opponent_history[-1]
+        d_ratio = opponent_history.count('D') / len(opponent_history)
+        if d_ratio > 0.25:
+            return 'D'
+        return 'C'
 
 
 class Cave(Strategy):
     """
-    Rank 4
+    Rank 4 (Rob Cave)
+    4th Place
     Forgiving retaliator: Defects if opponent defected in ANY of the last 2 rounds.
-    However, if 2 consecutive double-cooperative rounds occur (C,C), it resets memory.
     """
     def __init__(self):
         super().__init__("Cave")
 
     def move(self, my_history, opponent_history):
-        if len(opponent_history) < 2:
+        if not opponent_history:
             return 'C'
         
         # Check last two turns for defections
-        if opponent_history[-1] == 'D' or opponent_history[-2] == 'D':
+        if opponent_history[-1] == 'D' or (len(opponent_history) >= 2 and opponent_history[-2] == 'D'):
+            return 'D'
+        return 'C'
+
+
+class WmAdams(Strategy):
+    """
+    Rank 5 (William Adams)
+    5th Place
+    Uses a 5-round sliding window memory. Retaliates with 'D' if the opponent
+    has defected 2 or more times within the last 5 turns.
+    """
+    def __init__(self):
+        super().__init__("WmAdams")
+
+    def move(self, my_history, opponent_history):
+        if not opponent_history:
+            return 'C'
+        
+        recent_window = opponent_history[-5:]
+        if recent_window.count('D') >= 2:
             return 'D'
         return 'C'
 
 
 class Graaskamp(Strategy):
     """
-    Rank 5 (Jim Graaskamp)
+    Rank 6 (Jim Graaskamp & Ken Katzen)
+    6th Place
     Plays Tit-for-Tat standardly, but inserts dynamic periodic probing defections
     at rounds 50, 100, and 150 to check if opponent is an unretaliating bot (e.g. AlwaysCooperate).
     If opponent fails to punish defections within 5 turns, it switches to Always Defect.
@@ -122,6 +141,7 @@ class Graaskamp(Strategy):
     def move(self, my_history, opponent_history):
         n = len(my_history)
         if not opponent_history:
+            self.exploiting = False  # Reset state on match start
             return 'C'
 
         # Check if probe succeeded without retaliation
@@ -139,47 +159,10 @@ class Graaskamp(Strategy):
         return opponent_history[-1]
 
 
-class WmAdams(Strategy):
-    """
-    Rank 6 (William Adams)
-    Uses a 5-round sliding window memory. Retaliates with 'D' if the opponent
-    has defected 2 or more times within the last 5 turns.
-    """
-    def __init__(self):
-        super().__init__("WmAdams")
-
-    def move(self, my_history, opponent_history):
-        if not opponent_history:
-            return 'C'
-        
-        recent_window = opponent_history[-5:]
-        if recent_window.count('D') >= 2:
-            return 'D'
-        return 'C'
-
-
-class Borufsen(Strategy):
-    """
-    Rank 7
-    Calculates cumulative defect ratio across entire match length.
-    If opponent's lifetime defection rate exceeds 25%, it locks into retaliatory defection.
-    """
-    def __init__(self):
-        super().__init__("Borufsen")
-
-    def move(self, my_history, opponent_history):
-        if not opponent_history:
-            return 'C'
-        
-        d_ratio = opponent_history.count('D') / len(opponent_history)
-        if d_ratio > 0.25:
-            return 'D'
-        return 'C'
-
-
 class Kluepfel(Strategy):
     """
-    Rank 8
+    Rank 10 (Charles Kluepfel)
+    10th Place
     Plays Tit-for-Tat, but adds a 3% random noise defect element to test opponent stability.
     """
     def __init__(self):
@@ -195,7 +178,8 @@ class Kluepfel(Strategy):
 
 class RichardHufford(Strategy):
     """
-    Rank 9
+    Rank 16 (Richard Hufford)
+    16th Place
     Early-phase Tit-for-Two-Tats (forgiving), late-phase standard Tit-for-Tat (strict).
     - Rounds 1-20: Requires 2 consecutive defections to retaliate.
     - Rounds 21+: Retaliates immediately after 1 defection.
@@ -216,7 +200,8 @@ class RichardHufford(Strategy):
 
 class Yamachi(Strategy):
     """
-    Rank 10
+    Rank 17 (Brian Yamauchi)
+    17th Place
     Looks at a 3-round sliding memory window.
     Defects only if opponent defected at least twice in the past 3 turns.
     """
@@ -224,84 +209,76 @@ class Yamachi(Strategy):
         super().__init__("Yamachi")
 
     def move(self, my_history, opponent_history):
-        if len(opponent_history) < 3:
+        if not opponent_history:
             return 'C'
         return 'D' if opponent_history[-3:].count('D') >= 2 else 'C'
 
 
-# =====================================================================
-# TOP 10 "NOT NICE" STRATEGIES (Probing / Exploitative / Mean)
-# Higher-Ranking Mean Entries in Axelrod's 2nd Tournament
-# =====================================================================
-
-class Tester2nd(Strategy):
+class Elem(Strategy):
     """
-    Rank 20 (Top-performing non-nice strategy)
-    Probing strategy: Immediately defects on round 1.
-    If opponent retaliates with D, switches to standard Tit-for-Tat to cooperate.
-    If opponent does not retaliate, continues defecting to exploit them.
+    Rank N/A (Modern library baseline - Did not exist in the 2nd tournament)
+    Plays Tit-for-Tat, but continuously monitors opponent's cooperation rate.
+    If the opponent proves to be highly cooperative (>85% C after 10 turns),
+    it takes a calculated 5% gamble to defect unprovoked for extra payoff.
     """
     def __init__(self):
-        super().__init__("Tester 2nd")
+        super().__init__("Elem")
 
     def move(self, my_history, opponent_history):
         if not opponent_history:
-            return 'D'
-        # If opponent ever retaliated, fall back to TFT
-        if 'D' in opponent_history:
-            return opponent_history[-1]
-        # Otherwise keep defecting
-        return 'D'
-
-
-class DynamicTFT(Strategy):
-    """
-    Rank 26
-    Adjusts threshold dynamically: Starts mean (D) or nice (C) based on opponent's overall
-    aggression level. Retaliates faster as opponent's defection percentage rises.
-    """
-    def __init__(self):
-        super().__init__("Dynamic TFT")
-
-    def move(self, my_history, opponent_history):
-        if not opponent_history:
-            return 'D'
+            return 'C'
         
-        d_rate = opponent_history.count('D') / len(opponent_history)
-        if random.random() < d_rate:
-            return 'D'
+        n = len(opponent_history)
+        if n > 10:
+            c_rate = opponent_history.count('C') / n
+            if c_rate > 0.85 and random.random() < 0.05:
+                return 'D'
+                
         return opponent_history[-1]
 
 
+# =====================================================================
+# NOT NICE STRATEGIES (Probing / Exploitative / Mean)
+# =====================================================================
+
 class Tranquilizer(Strategy):
     """
-    Rank 27 (Craig Feathers)
-    Highly complex psychological strategy:
-    - Cooperates for 10-20 turns to build trust and lull opponent into cooperation.
-    - Slowly inserts defections separated by long cooperative gaps.
-    - If opponent retaliates, it immediately cooperates to 'tranquilize' them.
-    - Incrementally increases defection probability as game progresses ($p = n / 200$).
+    Rank 27 (Submitted as Craig Feathers)
+    27th Place
+    - Baseline: Plays Tit-for-Tat.
+    - Sneaks in dynamic defections with probability p = n / 200.
+    - If opponent retaliates after a Tranquilizer defection, apologizes ('C') to reset trust.
     """
     def __init__(self):
         super().__init__("Tranquilizer")
 
     def move(self, my_history, opponent_history):
-        n = len(my_history)
-        if n < 10:
-            return 'C'
-        
-        # If opponent retaliated last move, apologize immediately to tranquilize
-        if opponent_history[-1] == 'D':
+        if not opponent_history:
             return 'C'
             
-        # Calculate dynamic sneaky defection probability
-        p_defect = min(0.25, n / 200.0)
-        return 'D' if random.random() < p_defect else 'C'
+        n = len(my_history)
+        
+        # If opponent defected on the previous round:
+        if opponent_history[-1] == 'D':
+            # Apologize ONLY if we defected two turns ago (triggering their response)
+            if len(my_history) >= 2 and my_history[-2] == 'D':
+                return 'C'
+            # Otherwise, retaliate like Tit-for-Tat
+            return 'D'
+            
+        # If opponent cooperated, test sneaky defection after round 10
+        if n >= 10:
+            p_defect = min(0.25, n / 200.0)
+            if random.random() < p_defect:
+                return 'D'
+                
+        return 'C'
 
 
 class Joss(Strategy):
     """
-    Rank 36
+    Rank 28 (Grofman's adaptation of Joss logic)
+    28th Place
     Sneaky variant of Tit-for-Tat:
     Mirrors opponent's moves, but when opponent cooperates, there is a 10% chance
     Joss will sneak in an unprovoked defection to gain an advantage.
@@ -317,34 +294,15 @@ class Joss(Strategy):
         return 'D'
 
 
-class Tester3(Strategy):
-    """
-    Rank 40
-    Starts with 'D' on turn 1. If opponent cooperates on turn 1, defects again on turn 2.
-    If opponent retaliates on turn 2, apologizes on turn 3 and plays Tit-for-Tat thereafter.
-    """
-    def __init__(self):
-        super().__init__("Tester 3")
-
-    def move(self, my_history, opponent_history):
-        n = len(my_history)
-        if n == 0:
-            return 'D'
-        if n == 1:
-            return 'D' if opponent_history[0] == 'C' else 'C'
-        if 'D' in opponent_history:
-            return opponent_history[-1]
-        return 'D'
-
-
 class RevisedDowning(Strategy):
     """
-    Rank 42 (Leslie Downing)
+    Rank 40 (Leslie Downing)
+    40th Place
     Mathematical expected-value maximizer:
     Estimates conditional probabilities:
-    - $a$: Probability opponent cooperates given Downing cooperates.
-    - $b$: Probability opponent cooperates given Downing defects.
-    Defects on turn 1 to initialize $b$. Updates probabilities after each round 
+    - a: Probability opponent cooperates given Downing cooperates.
+    - b: Probability opponent cooperates given Downing defects.
+    Defects on turn 1 to initialize b. Updates probabilities after each round 
     and chooses the move (C or D) that yields higher long-term expected payoff.
     """
     def __init__(self):
@@ -381,7 +339,8 @@ class RevisedDowning(Strategy):
 
 class Tester(Strategy):
     """
-    Rank 46
+    Rank 46 (David Gladstein)
+    46th Place
     Defects on move 1. If opponent retaliates on move 2, plays Tit-for-Tat.
     If opponent does NOT retaliate, alternates C, D, C, D to exploit opponent.
     """
@@ -399,9 +358,81 @@ class Tester(Strategy):
         return 'D' if n % 2 == 0 else 'C'
 
 
+class RandomStrategy(Strategy):
+    """
+    Rank 62 (The uniform baseline)
+    62nd Place
+    Chooses randomly between C and D with 50/50 probability each round.
+    """
+    def __init__(self):
+        super().__init__("Random (50/50)")
+
+    def move(self, my_history, opponent_history):
+        return 'C' if random.random() < 0.5 else 'D'
+
+
+class Tester2nd(Strategy):
+    """
+    Rank N/A (Modern benchmark variant - Did not exist in the 2nd tournament)
+    Probing strategy: Immediately defects on round 1.
+    If opponent retaliates with D, switches to standard Tit-for-Tat to cooperate.
+    If opponent does not retaliate, continues defecting to exploit them.
+    """
+    def __init__(self):
+        super().__init__("Tester 2nd")
+
+    def move(self, my_history, opponent_history):
+        if not opponent_history:
+            return 'D'
+        # If opponent ever retaliated, fall back to TFT
+        if 'D' in opponent_history:
+            return opponent_history[-1]
+        # Otherwise keep defecting
+        return 'D'
+
+
+class DynamicTFT(Strategy):
+    """
+    Rank N/A (Modern library baseline - Did not exist in the 2nd tournament)
+    Adjusts threshold dynamically: Starts mean (D) or nice (C) based on opponent's overall
+    aggression level. Retaliates faster as opponent's defection percentage rises.
+    """
+    def __init__(self):
+        super().__init__("Dynamic TFT")
+
+    def move(self, my_history, opponent_history):
+        if not opponent_history:
+            return 'D'
+        
+        d_rate = opponent_history.count('D') / len(opponent_history)
+        if random.random() < d_rate:
+            return 'D'
+        return opponent_history[-1]
+
+
+class Tester3(Strategy):
+    """
+    Rank N/A (Modern benchmark variant - Did not exist in the 2nd tournament)
+    Starts with 'D' on turn 1. If opponent cooperates on turn 1, defects again on turn 2.
+    If opponent retaliates on turn 2, apologizes on turn 3 and plays Tit-for-Tat thereafter.
+    """
+    def __init__(self):
+        super().__init__("Tester 3")
+
+    def move(self, my_history, opponent_history):
+        n = len(my_history)
+        if n == 0:
+            return 'D'
+        if n == 1:
+            return 'D' if opponent_history[0] == 'C' else 'C'
+        if 'D' in opponent_history:
+            return opponent_history[-1]
+        return 'D'
+
+
 class SuspiciousTitForTat(Strategy):
     """
-    Rank 60
+    Rank N/A (Theoretical baseline - Did not exist in the 2nd tournament)
     Identical to Tit-for-Tat in every way except it strikes first with 'D' on turn 1.
     """
     def __init__(self):
@@ -415,7 +446,7 @@ class SuspiciousTitForTat(Strategy):
 
 class AlwaysDefect(Strategy):
     """
-    Rank 62
+    Rank N/A (Theoretical baseline - Did not exist in the 2nd tournament)
     Unconditionally defects on every single round.
     """
     def __init__(self):
@@ -423,15 +454,3 @@ class AlwaysDefect(Strategy):
 
     def move(self, my_history, opponent_history):
         return 'D'
-
-
-class RandomStrategy(Strategy):
-    """
-    Rank 63 (Baseline entry)
-    Chooses randomly between C and D with 50/50 probability each round.
-    """
-    def __init__(self):
-        super().__init__("Random (50/50)")
-
-    def move(self, my_history, opponent_history):
-        return 'C' if random.random() < 0.5 else 'D'
